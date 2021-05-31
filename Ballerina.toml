@@ -1,0 +1,14 @@
+[package]
+org = "ballerinax"
+name = "cdata_connector_to_salesforce"
+version = "0.1.0"
+license= ["Apache-2.0"]
+authors = ["Ballerina"]
+keywords = ["CData","Salesforce"]
+
+[build-options]
+observabilityIncluded = true
+
+[[platform.java11.dependency]]
+path = "./cdataDrivers/cdata.jdbc.salesforce.jar"
+modules = ["cdata_salesforce"]

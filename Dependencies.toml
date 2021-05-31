@@ -1,0 +1,11 @@
+[[dependency]]
+org = "ballerina"
+name = "sql"
+version = "0.6.0-alpha9"
+
+[[dependency]]
+org = "ballerinax"
+name = "java.jdbc"
+version = "0.6.0-alpha9"
+
+
