@@ -83,21 +83,21 @@ function getRecord() {
     dependsOn: [getRecord],
     enable: true
 }
-function updateAccount() {
-    Account account = {
-        Id: accountId,
-        Name: "Test Account Updated"
+function updateRecord() {
+    map<anydata> account = {
+        Name: "Test Account Updated",
+        AccountNumber: "Account Number Updated"
     };
-    string|sql:Error updateAccountResponse = cdataConnectorToSalesforce->updateAccount(account);
-    if (updateAccountResponse is string) {
-        io:println("Updated Account ID: ", updateAccountResponse);
+    string|sql:Error updateRecordResponse = cdataConnectorToSalesforce->updateRecord(sobjectName, accountId, account);
+    if (updateRecordResponse is string) {
+        io:println("Updated Account ID: ", updateRecordResponse);
     } else {
-        test:assertFail(updateAccountResponse.message());
+        test:assertFail(updateRecordResponse.message());
     }
 }
 
 @test:Config {
-    dependsOn: [updateAccount],
+    dependsOn: [updateRecord],
     enable: true
 }
 function deleteAccount() {

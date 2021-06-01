@@ -67,11 +67,11 @@ public client class Client {
         return <string>result.lastInsertId;
     }
 
-    isolated remote function getRecord(string sobjectName, string accountId, string... fields) 
+    isolated remote function getRecord(string sobjectName, string sobjectId, string... fields) 
                                        returns record {|record{} value;|}|error? {
         string selectQuery = string `SELECT `;
         string keys = string ``;
-        string queryLogic = string `FROM ${sobjectName} WHERE Id = ${accountId}`;
+        string queryLogic = string `FROM ${sobjectName} WHERE Id = ${sobjectId}`;
         int count = 1;
         foreach var item in fields {
             keys = keys + item + string `${(count == fields.length()) ? " " : ","}`;
@@ -82,8 +82,23 @@ public client class Client {
         return resultStream.next();
     }
 
-    isolated remote function updateAccount(Account account) returns string|sql:Error {
-        sql:ParameterizedQuery updateQuery = `UPDATE Account SET Name = ${account.Name} WHERE id = ${account.Id}`;
+    isolated remote function updateRecord(string sobjectName, string sobjectId, map<anydata> payload) 
+                                          returns string|sql:Error {
+        string updateQuery = string `UPDATE ${sobjectName} `;
+        string values = string `SET `;
+        string queryLogic = string ` WHERE Id = ${sobjectId}`;
+        int count = 1;
+        foreach var [key, value] in payload.entries() {
+            if (value is string) {
+                values = values + key + " = " + string `'${value}'` + string `${(count == payload.length()) ? "" : ","}`;
+            } else if (value is int|float|decimal|boolean) {
+                values = values + key + " = " + string `${value}` + string `${(count == payload.length()) ? "" : ","}`;
+            } else if (value is ()) {
+                values = values + key + " = " + string `NULL` + string `${(count == payload.length()) ? "" : ","}`;
+            }  
+            count = count + 1;
+        }
+        updateQuery = updateQuery + values + queryLogic;
         sql:ExecutionResult result = check self.cdataConnectorToSalesforce->execute(updateQuery);
         return <string>result.lastInsertId;
     }
