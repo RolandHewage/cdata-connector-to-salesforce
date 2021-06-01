@@ -23,7 +23,7 @@ public client class Client {
 
     isolated remote function getSObjects(string sobjectName) returns stream<record{}, error>|error {
         string selectQuery = string `SELECT * FROM (${sobjectName})`;
-        stream<record{}, error> resultStream = self.cdataConnectorToSalesforce->query(selectQuery, Account);
+        stream<record{}, error> resultStream = self.cdataConnectorToSalesforce->query(selectQuery);
         return resultStream;
     }
 
@@ -67,12 +67,19 @@ public client class Client {
         return <string>result.lastInsertId;
     }
 
-    isolated remote function getAccount(string accountId) returns record {|Account value;|}|error? {
-        sql:ParameterizedQuery selectQuery = `SELECT Id, Name, AccountNumber, Industry, Description FROM Account 
-                                              WHERE Id = ${accountId};`;
-        stream<record{}, error> resultStream = self.cdataConnectorToSalesforce->query(selectQuery, Account);
-        stream<Account, sql:Error> accountStream = <stream<Account, sql:Error>>resultStream;
-        return accountStream.next();
+    isolated remote function getRecord(string sobjectName, string accountId, string... fields) 
+                                       returns record {|record{} value;|}|error? {
+        string selectQuery = string `SELECT `;
+        string keys = string ``;
+        string queryLogic = string `FROM ${sobjectName} WHERE Id = ${accountId}`;
+        int count = 1;
+        foreach var item in fields {
+            keys = keys + item + string `${(count == fields.length()) ? " " : ","}`;
+            count = count + 1;
+        }
+        selectQuery = selectQuery + keys + queryLogic;
+        stream<record{}, error> resultStream = self.cdataConnectorToSalesforce->query(selectQuery);
+        return resultStream.next();
     }
 
     isolated remote function updateAccount(Account account) returns string|sql:Error {

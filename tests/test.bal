@@ -64,19 +64,23 @@ function createRecord() {
     dependsOn: [createRecord],
     enable: true
 }
-function getAccount() {
-    record {|Account value;|}|error? accountStreamResponse = cdataConnectorToSalesforce->getAccount(accountId);
-    if (accountStreamResponse is record {|Account value;|}) {
-        io:println("Selected Account ID: ", accountStreamResponse.value["Id"]);
-    } else if (accountStreamResponse is ()) {
-        io:println("Account table is empty");
+function getRecord() {
+    string Id = "Id";
+    string Name = "Name";
+    string AccountNumber = "AccountNumber";
+    record {|record{} value;|}|error? getRecordResponse = cdataConnectorToSalesforce->getRecord(sobjectName, 
+        accountId, Id, Name, AccountNumber);
+    if (getRecordResponse is record {|record{} value;|}) {
+        io:println("Selected SObject ID: ", getRecordResponse.value["Id"]);
+    } else if (getRecordResponse is ()) {
+        io:println("SObject table is empty");
     } else {
-        test:assertFail(accountStreamResponse.message());
+        test:assertFail(getRecordResponse.message());
     }
 }
 
 @test:Config {
-    dependsOn: [getAccount],
+    dependsOn: [getRecord],
     enable: true
 }
 function updateAccount() {
