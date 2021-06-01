@@ -2,6 +2,37 @@ public type Configuration record {
     string username;
     string password;
     string securityToken;
+    *Security;
+    *Caching;
+    *ConnectionPooling;
+    *Advance;
+};
+
+public type Security record {
+    string ssoProperties?;
+    string sslServerCert?;
+};
+
+public type Caching record {
+    boolean autoCacheEnabled?;
+    string cacheConnection?;
+    string cacheDriver?;
+    string cacheLocation?;
+    boolean cacheMetadata?;
+    string cacheTolerance?;
+};
+
+public type ConnectionPooling record {
+    boolean poolingEnabled?;
+    int maxOpenConnections?;
+    decimal maxConnectionLifeTime?;
+    int minIdleConnections?;
+};
+
+public type Advance record {
+    int queryTimeout?;
+    int maxRows?;
+    int batchSize?;
 };
 
 public type Account record {
