@@ -103,8 +103,8 @@ public client class Client {
         return <string>result.lastInsertId;
     }
 
-    isolated remote function deleteAccount(string accountId) returns sql:Error? {
-        sql:ParameterizedQuery deleteQuery = `DELETE FROM Account WHERE id = ${accountId}`;
+    isolated remote function deleteRecord(string sobjectName, string sobjectId) returns sql:Error? {
+        string deleteQuery = string `DELETE FROM ${sobjectName} WHERE Id = ${sobjectId}`;
         sql:ExecutionResult result = check self.cdataConnectorToSalesforce->execute(deleteQuery);
         return;
     }

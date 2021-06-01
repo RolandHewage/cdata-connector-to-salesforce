@@ -100,12 +100,8 @@ function updateRecord() {
     dependsOn: [updateRecord],
     enable: true
 }
-function deleteAccount() {
-    Account account = {
-        Id: accountId,
-        Name: "Test Account Updated"
-    };
-    sql:Error? deleteAccountResponse = cdataConnectorToSalesforce->deleteAccount(accountId);
+function deleteRecord() {
+    sql:Error? deleteAccountResponse = cdataConnectorToSalesforce->deleteRecord(sobjectName, accountId);
     if (deleteAccountResponse is ()) {
         io:println("Deleted Account ID: ", accountId);
     } else {
@@ -114,7 +110,7 @@ function deleteAccount() {
 }
 
 @test:Config {
-    dependsOn: [deleteAccount],
+    dependsOn: [deleteRecord],
     enable: true
 }
 function batchInsertAccount() {
