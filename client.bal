@@ -3,10 +3,22 @@ import ballerinax/java.jdbc;
 
 public client class Client {
     public jdbc:Client cdataConnectorToSalesforce;
+    private sql:ConnectionPool connPool;
 
     public isolated function init(Configuration configuration) returns sql:Error? {
-        self.cdataConnectorToSalesforce = check new ("jdbc:salesforce:User=" + configuration.username + 
-            ";Password=" + configuration.password + ";Security Token=" + configuration.securityToken);
+        if (configuration?.poolingEnabled == true) {
+            self.connPool = {
+                maxOpenConnections: configuration?.maxOpenConnections ?: 15,
+                maxConnectionLifeTime: configuration?.maxConnectionLifeTime ?: 1800,
+                minIdleConnections: configuration?.minIdleConnections ?: 15
+            };
+            self.cdataConnectorToSalesforce = check new ("jdbc:salesforce:User=" + configuration.username + 
+                ";Password=" + configuration.password + ";Security Token=" + configuration.securityToken, 
+                connectionPool = self.connPool);
+        } else {
+            self.cdataConnectorToSalesforce = check new ("jdbc:salesforce:User=" + configuration.username + 
+                ";Password=" + configuration.password + ";Security Token=" + configuration.securityToken);
+        }
     }
 
     isolated remote function getAccounts() returns stream<Account, sql:Error>|error {
