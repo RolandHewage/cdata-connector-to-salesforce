@@ -5,6 +5,7 @@ import ballerina/test;
 
 string accountId = "";
 string[] accountIds = [];
+string sobjectName = "Account";
 
 // Connection Configurations
 configurable string username = os:getEnv("USERNAME");
@@ -22,44 +23,45 @@ Client cdataConnectorToSalesforce = check new (config);
 @test:Config {
     enable: true
 }
-function getAccounts() {
-    stream<Account, sql:Error>|error accountStreamResponse = cdataConnectorToSalesforce->getAccounts();
-    if (accountStreamResponse is stream<Account, sql:Error>) {
-        error? e = accountStreamResponse.forEach(isolated function(Account account) {
-            io:println("Account details: ", account);
+function getSObjects() {
+    stream<record{}, error>|error sobjectStreamResponse = cdataConnectorToSalesforce->getSObjects(sobjectName);
+    if (sobjectStreamResponse is stream<record{}, error>) {
+        error? e = sobjectStreamResponse.forEach(isolated function(record{} sobject) {
+            io:println("SObject details: ", sobject);
         });
         if (e is error) {
             test:assertFail(e.message());
         }
     } else {
-        test:assertFail(accountStreamResponse.message());
+        test:assertFail(sobjectStreamResponse.message());
     }
 }
 
 @test:Config {
-    dependsOn: [getAccounts],
+    dependsOn: [getSObjects],
     enable: true
 }
-function createAccount() {
-    Account account = {
-        Id: "ACC_000000",
+function createRecord() {
+    map<anydata> account = {
         Name: "Test Account New", 
         Type: "Customer - Direct", 
         AccountNumber: "CD355120-TEST",
-        Industry: "Energy", 
-        Description: "Test account new desc."
+        // Industry: "Energy", 
+        Industry: (),
+        Description: "Test account new desc.",
+        NumberOfEmployees: 10
     };
-    string|sql:Error createAccountResponse = cdataConnectorToSalesforce->createAccount(account);
-    if (createAccountResponse is string) {
-        io:println("Created Account ID: ", createAccountResponse);
-        accountId = createAccountResponse;
+    string|sql:Error createRecordResponse = cdataConnectorToSalesforce->createRecord(sobjectName, account);
+    if (createRecordResponse is string) {
+        io:println("Created Record ID: ", createRecordResponse);
+        accountId = createRecordResponse;
     } else {
-        test:assertFail(createAccountResponse.message());
+        test:assertFail(createRecordResponse.message());
     }
 }
 
 @test:Config {
-    dependsOn: [createAccount],
+    dependsOn: [createRecord],
     enable: true
 }
 function getAccount() {

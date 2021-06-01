@@ -21,19 +21,48 @@ public client class Client {
         }
     }
 
-    isolated remote function getAccounts() returns stream<Account, sql:Error>|error {
-        // sql:ParameterizedQuery selectQuery = `SELECT Id, Name, AccountNumber, Industry, Description FROM Account`;
-        sql:ParameterizedQuery selectQuery = `SELECT * FROM Account`;
+    isolated remote function getSObjects(string sobjectName) returns stream<record{}, error>|error {
+        string selectQuery = string `SELECT * FROM (${sobjectName})`;
         stream<record{}, error> resultStream = self.cdataConnectorToSalesforce->query(selectQuery, Account);
-        stream<Account, sql:Error> accountStream = <stream<Account, sql:Error>>resultStream;
-        return accountStream;
+        return resultStream;
     }
 
-    isolated remote function createAccount(Account account) returns string|sql:Error {
-        sql:ParameterizedQuery insertQuery = `INSERT INTO Account (Name, Type, AccountNumber, Industry, Description) 
-                                              VALUES (${account.Name}, ${account?.Type ?: ""},
-                                              ${account?.AccountNumber ?: ""}, ${account?.Industry ?: ""},
-                                              ${account?.Description ?: ""})`;
+    isolated remote function createRecord(string sobjectName, map<anydata> payload) returns string|sql:Error {
+        string insertQuery = string `INSERT INTO ${sobjectName} `;
+        string keys = string `(`;
+        string values = string `VALUES (`;
+        int count = 1;
+        foreach var [key, value] in payload.entries() {
+            // if (count == payload.length()) {
+            //     keys = keys + key + ") ";
+            //     if (value is string) {
+            //         values = values + string `"${value}"` + ")";
+            //     } else if (value is int|float|decimal|boolean) {
+            //         values = values + string `${value}` + ")";
+            //     } else if (value is ()) {
+            //         values = values + string `NULL` + ")";
+            //     }         
+            // } else {
+            //     keys = keys + key + ",";
+            //     if (value is string) {
+            //         values = values + string `"${value}"` + ",";
+            //     } else if (value is int|float|decimal|boolean) {
+            //         values = values + string `${value}` + ",";
+            //     } else if (value is ()) {
+            //         values = values + string `NULL` + ",";
+            //     } 
+            // }
+            keys = keys + key + string `${(count == payload.length()) ? ") " : ","}`;
+            if (value is string) {
+                values = values + string `"${value}"` + string `${(count == payload.length()) ? ")" : ","}`;
+            } else if (value is int|float|decimal|boolean) {
+                values = values + string `${value}` + string `${(count == payload.length()) ? ")" : ","}`;
+            } else if (value is ()) {
+                values = values + string `NULL` + string `${(count == payload.length()) ? ")" : ","}`;
+            }  
+            count = count + 1;
+        }
+        insertQuery = insertQuery + keys + values;
         sql:ExecutionResult result = check self.cdataConnectorToSalesforce->execute(insertQuery);
         return <string>result.lastInsertId;
     }
